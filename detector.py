@@ -1,3 +1,4 @@
+# hbb detector
 import sys
 
 sys.path.append('.')
@@ -127,11 +128,11 @@ class Detector(object):
 
 if __name__ == '__main__':
 
-    pt_path = ''
-    model = Detector(pt_path, None, 640, xcycwh=False)
-    imgs_root = ''
+    pt_path = '/home/virus/Object_Detection/flexible-yolov5-obb/runs/train/exp/weights/last.pt'
+    model = Detector(pt_path, '/home/virus/Object_Detection/flexible-yolov5-obb/classnames.txt', 640, xcycwh=False)
+    imgs_root = '/home/virus/Object_Detection/datasets/dota_interest_640/images/test'
     imgs = os.listdir(imgs_root)
-    save_dir = ''
+    save_dir = '/home/virus/Object_Detection/flexible-yolov5-obb/runs/test/exp1'
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     for img in imgs:

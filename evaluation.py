@@ -359,7 +359,7 @@ if __name__ == '__main__':
         txt中的内容格式:  目标所属图片名称 置信度 poly classname
     3.写一个evaluation_trans.py将上个文件夹中的所有txt中的目标提取出来,按照目标类别分别存入 Task1_类别名.txt中:
         txt中的内容格式:  目标所属原始图片名称 置信度 poly
-    4.写一个imgname2txt.py 将测试集的所有图片名称打印到namefile.txt中
+    4.写一个imgname2txt.py 将测试集的所有图片名称打印到imgnamefile.txt中
     '''
     evaluation(
         detoutput='./DOTA/detection',

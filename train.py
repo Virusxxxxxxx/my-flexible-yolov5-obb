@@ -206,7 +206,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     if rank in [-1, 0]:
         ema.updates = start_epoch * nb // accumulate  # set EMA updates
         testloader = create_dataloader(test_path, imgsz_test, batch_size, gs, opt,  # testloader
-                                       hyp=hyp, cache=opt.cache_images and not opt.notest, rect=True, rank=-1,
+                                       hyp=hyp, cache=opt.cache_images and not opt.notest, rect=False, rank=-1,
                                        world_size=opt.world_size, workers=opt.workers,
                                        pad=0.5, prefix=colorstr('val: '))[0]
 
@@ -387,7 +387,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               compute_loss=compute_loss,
                               batch_size=batch_size,
                               save_dir=save_dir)
-                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest'
+                datasets = 'dota_interest_small_640' if opt.small_datasets else 'dota_interest_640'
                 # recall, precision, map50 = val(
                 map50 = val(
                     detectionPath='./DOTA/detection',

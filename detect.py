@@ -36,7 +36,7 @@ def detect(opt,
     out, small_datasets, save_txt, imgsz = \
         opt.detect_output, opt.small_datasets, opt.save_txt, opt.img_size[0]
 
-    source = '../datasets/dota_interest_small/images/val' if opt.small_datasets else '../datasets/dota_interest/images/val'
+    source = '../datasets/dota_interest_small/images/val' if opt.small_datasets else '../datasets/dota_interest_640/images/val'
 
     # Initialize/load model and set device
     training = model is not None
@@ -73,7 +73,7 @@ def detect(opt,
     # 通过不同的输入源来设置不同的数据加载方式
     if not training:
         # dataloader = LoadImages(source, img_size=imgsz)  # val
-        dataloader = create_dataloader(source, imgsz, batch_size, model.stride.max(), opt, pad=0.5, rect=True,
+        dataloader = create_dataloader(source, imgsz, batch_size, model.stride.max(), opt, pad=0.5, rect=False,
                                        prefix=colorstr('test: ' if opt.task == 'test' else 'val: '))[0]
 
     # Get names
@@ -90,6 +90,8 @@ def detect(opt,
     else:
         s = ('%10s' % 'detect')
     loss = torch.zeros(4, device=device)
+    # 设置画框的颜色
+    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
     pbar = tqdm(dataloader, desc=s)
     for batch_i, (img, targets, paths, shapes) in enumerate(pbar):
         # img = torch.from_numpy(img).to(device)
@@ -155,8 +157,6 @@ def detect(opt,
                     conf_str = '%.3f' % conf
                     # write detection result txt before merge
                     rbox2txt(rbox, classname, conf_str, Path(p).stem, str(out + '/result_txt/result_before_merge'))
-                    # 设置画框的颜色
-                    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
                     if plots or batch_i < 3:
                         # Add bbox to image
                         plot_one_rotated_box(rbox, im0, label=label, color=colors[int(cls)], line_thickness=1)
@@ -205,10 +205,10 @@ if __name__ == '__main__':
         update:如果为True，则对所有模型进行strip_optimizer操作，去除pt文件中的优化器等信息，默认为False
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp4/weights/last.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp7/weights/last.pt', help='model.pt path(s)')
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')  # output folder
     parser.add_argument('--small-datasets', action='store_true', help='display results')
-    parser.add_argument('--img-size', type=int, default=[1024, 1024], help='inference size (pixels)')
+    parser.add_argument('--img-size', type=int, default=[640, 640], help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.4, help='IOU threshold for NMS')
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
