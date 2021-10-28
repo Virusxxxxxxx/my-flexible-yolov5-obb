@@ -8,7 +8,9 @@ from od.models.modules.common import Conv
 from od.models.backbone import build_backbone
 from od.models.neck import build_neck
 from od.models.head import build_head
+from utils.plots import feature_visualization
 from utils.torch_utils import initialize_weights, fuse_conv_and_bn, model_info
+from pathlib import Path
 
 
 class Model(nn.Module):
@@ -63,10 +65,16 @@ class Model(nn.Module):
     def info(self, verbose=False, img_size=640):  # print model information
         model_info(self, verbose, img_size)
 
-    def forward(self, x):
+    def forward(self, x, visualize=False):
         out = self.backbone(x)
+        if visualize:
+            feature_visualization(out, 'Swin', save_dir=Path(visualize))
         out = self.fpn(out)
+        if visualize:
+            feature_visualization(out, 'FPN', save_dir=Path(visualize))
         out = self.pan(out)
+        if visualize:
+            feature_visualization(out, "PAN", save_dir=Path(visualize))
         y = self.detection(list(out))
         return y
 

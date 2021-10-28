@@ -581,10 +581,10 @@ class SwinTransformer(nn.Module):
 
     def forward(self, x):
         """Forward function."""
-        x = self.patch_embed(x)
+        x = self.patch_embed(x)  # feature map / 4
 
         Wh, Ww = x.size(2), x.size(3)
-        if self.ape:
+        if self.ape:  # absolute position embedding
             # interpolate the position embedding to the corresponding size
             absolute_pos_embed = F.interpolate(self.absolute_pos_embed, size=(Wh, Ww), mode='bicubic')
             x = (x + absolute_pos_embed).flatten(2).transpose(1, 2)  # B Wh*Ww C

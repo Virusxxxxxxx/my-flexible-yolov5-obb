@@ -1,5 +1,11 @@
+# kmeans++ + swin-S
 backbone:
   type: SwinTransformer
+  patch_size: 4
+  embed_dim: 96
+  depths: [2, 2, 18, 2]
+  num_heads: [3, 6, 12, 24]
+  window_size: 7
 head:
   nc: 2
   stride: [8.0, 16.0, 32.0]

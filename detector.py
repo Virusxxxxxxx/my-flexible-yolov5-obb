@@ -128,7 +128,7 @@ class Detector(object):
 
 if __name__ == '__main__':
 
-    pt_path = '/home/virus/Object_Detection/flexible-yolov5-obb/runs/train/exp/weights/last.pt'
+    pt_path = '/home/virus/Object_Detection/flexible-yolov5-obb/runs/train/exp-swin-19-L/weights/last.pt'
     model = Detector(pt_path, '/home/virus/Object_Detection/flexible-yolov5-obb/classnames.txt', 640, xcycwh=False)
     imgs_root = '/home/virus/Object_Detection/datasets/dota_interest_640/images/test'
     imgs = os.listdir(imgs_root)

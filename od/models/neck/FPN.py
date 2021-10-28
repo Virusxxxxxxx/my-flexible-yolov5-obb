@@ -41,7 +41,7 @@ class PyramidFeatures(nn.Module):
             'inner_p4': inner_p4,
             'outer_p4': outer_p4,
         }
-        self.re_channels_out()
+        self.re_channels_out()  # update channels_out by gw
         self.concat = Concat()
 
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
@@ -53,8 +53,9 @@ class PyramidFeatures(nn.Module):
                           'P4_size': self.channels_out['outer_p4'],
                           'P5_size': self.C5_size}
         print("FPN input channel size: C3 {}, C4 {}, C5 {}".format(self.C3_size, self.C4_size, self.C5_size))
-        print("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.C3_size + self.channels_out['outer_p4'], self.channels_out['outer_p4'],
-                                                                    self.C5_size))
+        print("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.out_shape['P3_size'],
+                                                                    self.out_shape['P4_size'],
+                                                                    self.out_shape['P5_size']))
 
     def get_depth(self, n):
         return max(round(n * self.gd), 1) if n > 1 else n

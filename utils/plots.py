@@ -532,3 +532,29 @@ def plotChart_interest(filename, saveDir):
         plt.ylabel("AP")
     plt.grid()
     plt.savefig(saveDir + '/' + filename + ".png")
+
+
+def feature_visualization(x, module_type, n=32, save_dir=Path('runs/detect/exp')):
+    """
+    x:              Features to be visualized (x must not be float16.Change it in detect.py img.float, not img.half())
+    module_type:    Module type
+    stage:          Module stage within model
+    n:              Maximum number of feature maps to plot
+    save_dir:       Directory to save results
+    """
+    for i in range(len(x)):
+        batch, channels, height, width = x[i].shape  # batch, channels, height, width
+        if height > 1 and width > 1:
+            f = f"stage{i}_{module_type}_features.png"  # filename
+            blocks = torch.chunk(x[i][0].cpu(), channels, dim=0)  # select batch index 0, block by channels
+            n = min(n, channels)  # number of plots
+            fig, ax = plt.subplots(math.ceil(n / 8), 8, tight_layout=True)  # 8 rows x n/8 cols
+            ax = ax.ravel()
+            plt.subplots_adjust(wspace=0.05, hspace=0.05)
+            for i in range(n):
+                ax[i].imshow(blocks[i].squeeze())  # cmap='gray'
+                ax[i].axis('off')
+
+            print(f'Saving {save_dir / f}... ({n}/{channels})')
+            plt.savefig(save_dir / f, dpi=300, bbox_inches='tight')
+            plt.close()

@@ -30,7 +30,8 @@ def detect(opt,
            compute_loss=None,
            batch_size=1,
            save_dir=Path(''),
-           plots=False
+           plots=False,  # plots detect result
+           visualize=False,  # visualize features
            ):
     # 获取输出文件夹，输入路径，权重，参数等参数
     out, small_datasets, save_txt, imgsz = \
@@ -58,7 +59,7 @@ def detect(opt,
     os.makedirs(out)  # make new output folder
     # 如果设备为gpu，使用Float16
     half = device.type != 'cpu'  # half precision only supported on CUDA
-    if half:
+    if half and not visualize:
         model.half()  # 设置Float16
     model.eval()
 
@@ -97,17 +98,20 @@ def detect(opt,
         # img = torch.from_numpy(img).to(device)
         img = img.to(device, non_blocking=True)
         # 图片也设置为Float16
-        img = img.half() if half else img.float()  # uint8 to fp16/32
+        img = img.half() if half and not visualize else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         targets = targets.to(device)
         nb, _, height, width = img.shape  # batch size, channels, height, width
+        if visualize:  # visualize features
+            visualize = increment_path(save_dir / Path(paths[0]).stem)
+            Path(visualize).mkdir(parents=True, exist_ok=True)
 
         # inference
         with torch.no_grad():
             # Inference
             t = time_synchronized()
             # pred -> (batch_size, boxes, cls)  -> batch_size=1, cls = 16 + 5 + 180
-            pred, train_out = model(img)
+            pred, train_out = model(img, visualize=visualize)
             t0 += time_synchronized() - t  # inference time
 
             # 计算验证集损失
@@ -205,7 +209,7 @@ if __name__ == '__main__':
         update:如果为True，则对所有模型进行strip_optimizer操作，去除pt文件中的优化器等信息，默认为False
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp7/weights/last.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp-swin-45-M/weights/last.pt', help='model.pt path(s)')
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')  # output folder
     parser.add_argument('--small-datasets', action='store_true', help='display results')
     parser.add_argument('--img-size', type=int, default=[640, 640], help='inference size (pixels)')
@@ -224,8 +228,9 @@ if __name__ == '__main__':
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--plots', action='store_true', help='plots when not training')
+    parser.add_argument('--visualize', action='store_true', help='visualize features')
     opt = parser.parse_args()
     print(opt)
 
     with torch.no_grad():
-        detect(opt, weights=opt.weights, plots=opt.plots)
+        detect(opt, weights=opt.weights, plots=opt.plots, visualize=opt.visualize)
