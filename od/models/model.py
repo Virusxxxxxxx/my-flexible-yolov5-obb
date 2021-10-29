@@ -27,6 +27,7 @@ class Model(nn.Module):
         self.backbone = build_backbone(backbone_type, **model_config.backbone)
         backbone_out = self.backbone.out_shape
 
+        backbone_out['version'] = model_config.backbone.version
         self.fpn = build_neck('FPN', **backbone_out)
         fpn_out = self.fpn.out_shape
 

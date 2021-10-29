@@ -5,3 +5,4 @@ runs
 utils/build
 wandb
 detection
+weights

@@ -387,7 +387,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               compute_loss=compute_loss,
                               batch_size=batch_size,
                               save_dir=save_dir)
-                datasets = 'dota_interest_small_640' if opt.small_datasets else 'dota_interest_640'
+                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_384'
                 # recall, precision, map50 = val(
                 map50 = val(
                     detectionPath='./DOTA/detection',
@@ -417,7 +417,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             # Log
             tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
                     'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                    'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
+                    'val/box_loss', 'val/obj_loss', 'val/cls_loss', 'val/angle_loss',  # val loss obb
                     'x/lr0', 'x/lr1', 'x/lr2']  # params
             for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
                 if tb_writer:
@@ -499,7 +499,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='', help='initial weights path')
     parser.add_argument('--cfg', type=str, default='configs/model/model_yolo_p1.yaml', help='model.yaml path')
-    parser.add_argument('--data', type=str, default='configs/data/dota_interest.yaml', help='data.yaml path')
+    parser.add_argument('--data', type=str, default='configs/data/dota_interest_384.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='configs/hyp/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch-size', type=int, default=1, help='total batch size for all GPUs')

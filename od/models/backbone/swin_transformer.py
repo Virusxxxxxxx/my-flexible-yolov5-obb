@@ -477,7 +477,8 @@ class SwinTransformer(nn.Module):
                  patch_norm=True,
                  out_indices=(0, 1, 2, 3),
                  frozen_stages=-1,
-                 use_checkpoint=False):
+                 use_checkpoint=False,
+                 version='swin'):
         super().__init__()
 
         self.pretrain_img_size = pretrain_img_size

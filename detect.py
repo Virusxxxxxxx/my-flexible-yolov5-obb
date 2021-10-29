@@ -37,7 +37,7 @@ def detect(opt,
     out, small_datasets, save_txt, imgsz = \
         opt.detect_output, opt.small_datasets, opt.save_txt, opt.img_size[0]
 
-    source = '../datasets/dota_interest_small/images/val' if opt.small_datasets else '../datasets/dota_interest_640/images/val'
+    source = '../datasets/dota_interest_small/images/val' if opt.small_datasets else '../datasets/dota_interest_384/images/val'
 
     # Initialize/load model and set device
     training = model is not None
