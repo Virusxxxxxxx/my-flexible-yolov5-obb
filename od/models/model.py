@@ -28,11 +28,11 @@ class Model(nn.Module):
         backbone_out = self.backbone.out_shape
 
         backbone_out['version'] = model_config.backbone.version
-        self.fpn = build_neck('FPN', **backbone_out)
+        self.fpn = build_neck('FPN4', **backbone_out)
         fpn_out = self.fpn.out_shape
 
         fpn_out['version'] = model_config.backbone.version
-        self.pan = build_neck('PAN', **fpn_out)
+        self.pan = build_neck('PAN4', **fpn_out)
 
         pan_out = self.pan.out_shape
         model_config.head['ch'] = pan_out
