@@ -89,12 +89,7 @@ class PyramidFeatures(nn.Module):
     def forward(self, inputs):
         C2, C3, C4, C5 = inputs
         P5 = self.P5(C5)
-        up5 = self.P5_upsampled(P5)
-        concat_up5_C4 = self.concat([up5, C4])
-        P4 = self.P4(self.P4_1(concat_up5_C4))
-        up4 = self.P4_upsampled(P4)
-        concat_up4_C3 = self.concat([up4, C3])
-        P3 = self.P3(self.P3_1(concat_up4_C3))
-        up3 = self.P3_upsampled(P3)
-        P2 = self.concat([up3, C2])
+        P4 = self.P4(self.P4_1(self.concat([self.P5_upsampled(P5), C4])))
+        P3 = self.P3(self.P3_1(self.concat([self.P4_upsampled(P4), C3])))
+        P2 = self.concat([self.P3_upsampled(P3), C2])
         return P2, P3, P4, P5

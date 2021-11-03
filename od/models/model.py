@@ -27,15 +27,28 @@ class Model(nn.Module):
         self.backbone = build_backbone(backbone_type, **model_config.backbone)
         backbone_out = self.backbone.out_shape
 
-        backbone_out['version'] = model_config.backbone.version
-        self.fpn = build_neck('FPN4', **backbone_out)
-        fpn_out = self.fpn.out_shape
+        neck_type = model_config.neck.pop('type')
+        # BiFPN
+        if neck_type == 'BiFPN4':
+            backbone_out_channels = backbone_out.values
+            num_channels = model_config.neck.pop('num_channels')
+            neck_param = {
+                'num_channels': num_channels,
+                'conv_channels': backbone_out_channels
+            }
+            self.bifpn = nn.Sequential(
+                *[build_neck('BiFPN4', **neck_param) for i in range(3)]
+            )
+        else:  # FPN + PAN
+            backbone_out['version'] = model_config.backbone.version
+            self.fpn = build_neck('FPN4', **backbone_out)
+            fpn_out = self.fpn.out_shape
 
-        fpn_out['version'] = model_config.backbone.version
-        self.pan = build_neck('PAN4', **fpn_out)
+            fpn_out['version'] = model_config.backbone.version
+            self.pan = build_neck('PAN4', **fpn_out)
 
-        pan_out = self.pan.out_shape
-        model_config.head['ch'] = pan_out
+            pan_out = self.pan.out_shape
+            model_config.head['ch'] = pan_out
         self.detection = build_head('YOLOHead', **model_config.head)
         self.stride = self.detection.stride
         self._initialize_biases()

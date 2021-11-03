@@ -79,13 +79,7 @@ class PAN4(nn.Module):
     def forward(self, inputs):
         P2, P3, P4, P5 = inputs
         PP2 = self.PP2(P2)
-        conv_pp2 = self.convPP2(PP2)
-        concat2_3 = self.concat([conv_pp2, P3])
-        PP3 = self.PP3(concat2_3)
-        conv_pp3 = self.convPP3(PP3)
-        concat3_4 = self.concat([conv_pp3, P4])
-        PP4 = self.PP4(concat3_4)
-        conv_pp4 = self.convPP4(PP4)
-        concat4_5 = self.concat([conv_pp4, P5])
-        PP5 = self.PP5(concat4_5)
+        PP3 = self.PP3(self.concat([self.convPP2(PP2), P3]))
+        PP4 = self.PP4(self.concat([self.convPP3(PP3), P4]))
+        PP5 = self.PP5(self.concat([self.convPP4(PP4), P5]))
         return PP2, PP3, PP4, PP5
