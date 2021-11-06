@@ -18,7 +18,6 @@ class Model(nn.Module):
         """
         :param model_config:
         """
-
         super(Model, self).__init__()
         if type(model_config) is str:
             model_config = yaml.load(open(model_config, 'r'))
@@ -31,14 +30,16 @@ class Model(nn.Module):
         # BiFPN
         if neck_type == 'BiFPN4':
             backbone_out_channels = backbone_out.values
-            num_channels = model_config.neck.pop('num_channels')
-            neck_param = {
+            num_channels = model_config.neck.pop('num_channels')  # BiFPN num_channels
+            neck_param = {  # BiFPN param
                 'num_channels': num_channels,
                 'conv_channels': backbone_out_channels
             }
-            self.bifpn = nn.Sequential(
-                *[build_neck('BiFPN4', **neck_param) for i in range(3)]
-            )
+            # build bifpn
+            self.bifpn = nn.Sequential()
+            for i in range(3):
+                neck_param['first_time'] = True if i == 0 else False
+                self.bifpn.add_module(*[build_neck('BiFPN4', **neck_param)])
         else:  # FPN + PAN
             backbone_out['version'] = model_config.backbone.version
             self.fpn = build_neck('FPN4', **backbone_out)
@@ -54,6 +55,7 @@ class Model(nn.Module):
         self._initialize_biases()
 
         initialize_weights(self)
+        self.info()
 
     def _initialize_biases(self, cf=None):
         # initialize biases into Detect(), cf is class frequency

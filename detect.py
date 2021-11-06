@@ -37,7 +37,12 @@ def detect(opt,
     out, small_datasets, save_txt, imgsz = \
         opt.detect_output, opt.small_datasets, opt.save_txt, opt.img_size[0]
 
-    source = '../datasets/dota_interest_small/images/val' if opt.small_datasets else '../datasets/dota_interest_384/images/val'
+    if opt.small_datasets:
+        source = '../datasets/dota_interest_small/images/val'
+    elif plots:  # test and plots
+        source = '../datasets/dota_interest_{}/images/test'.format(imgsz)
+    else:
+        source = '../datasets/dota_interest_{}/images/val'.format(imgsz)
 
     # Initialize/load model and set device
     training = model is not None
@@ -156,7 +161,10 @@ def detect(opt,
                     #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                     #     with open(txt_path + '.txt', 'a') as f:
                     #         f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
-                    label = '%s %.2f' % (names[int(cls)], conf)
+                    if plots:
+                        label = '%d' % (int(cls))
+                    else:
+                        label = '%s %.2f' % (names[int(cls)], conf)
                     classname = '%s' % names[int(cls)]
                     conf_str = '%.3f' % conf
                     # write detection result txt before merge
@@ -209,10 +217,10 @@ if __name__ == '__main__':
         update:如果为True，则对所有模型进行strip_optimizer操作，去除pt文件中的优化器等信息，默认为False
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp-swin-45-M/weights/last.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp-swinS-p2-68-map68/weights/last.pt', help='model.pt path(s)')
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')  # output folder
     parser.add_argument('--small-datasets', action='store_true', help='display results')
-    parser.add_argument('--img-size', type=int, default=[640, 640], help='inference size (pixels)')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1024, 1024], help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.4, help='IOU threshold for NMS')
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')

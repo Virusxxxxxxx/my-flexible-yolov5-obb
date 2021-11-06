@@ -23,6 +23,7 @@ from tqdm import tqdm
 import sys
 
 from detect import detect
+from utils.autobatch import check_train_batch_size
 from val import val
 
 sys.path.append('.')
@@ -65,10 +66,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     plots = not opt.evolve  # create plots
     cuda = device.type != 'cpu'
     init_seeds(2 + rank)
-    # obb small datasets test
-    if opt.small_datasets:
-        filename = opt.data.split('.')[0]
-        opt.data = filename + '_small.yaml'
 
     with open(opt.data) as f:
         data_dict = yaml.load(f, Loader=yaml.SafeLoader)  # data dict
@@ -127,7 +124,9 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
     optimizer.add_param_group({'params': pg1, 'weight_decay': hyp['weight_decay']})  # add pg1 with weight_decay
     optimizer.add_param_group({'params': pg2})  # add pg2 (biases)
-    logger.info('Optimizer groups: %g .bias, %g conv.weight, %g other' % (len(pg2), len(pg1), len(pg0)))
+    # logger.info('Optimizer groups: %g .bias, %g conv.weight, %g other' % (len(pg2), len(pg1), len(pg0)))
+    logger.info(f"{colorstr('optimizer:')} {type(optimizer).__name__} with parameter groups "
+                f"{len(pg1)} weight, {len(pg0)} weight (no decay), {len(pg2)} bias")
     del pg0, pg1, pg2
 
     # Scheduler https://arxiv.org/pdf/1812.01187.pdf
@@ -176,6 +175,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     gs = int(model.stride.max())  # grid size (max stride)
     nl = model.detection.nl
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
+
+    # Batch size
+    if rank == -1 and batch_size == -1:  # single-GPU only, estimate best batch size
+        batch_size = check_train_batch_size(model, imgsz)
 
     # DP mode
     if cuda and rank == -1 and torch.cuda.device_count() > 1:
@@ -387,7 +390,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               compute_loss=compute_loss,
                               batch_size=batch_size,
                               save_dir=save_dir)
-                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_384'
+                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_' + opt.img_size[0]
                 # recall, precision, map50 = val(
                 map50 = val(
                     detectionPath='./DOTA/detection',
@@ -410,12 +413,12 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
             # Write
             with open(results_file, 'a') as f:
-                f.write(s + '%10.4g' * 8 % results + '\n')  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls)
+                f.write(s + '%10.4g' * 8 % results + '\n')  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls, angle)
             if len(opt.name) and opt.bucket:
                 os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
             # Log
-            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
+            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss', 'train/angle_loss',  # train loss
                     'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
                     'val/box_loss', 'val/obj_loss', 'val/cls_loss', 'val/angle_loss',  # val loss obb
                     'x/lr0', 'x/lr1', 'x/lr2']  # params
@@ -499,7 +502,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='', help='initial weights path')
     parser.add_argument('--cfg', type=str, default='configs/model/model_yolo_p1.yaml', help='model.yaml path')
-    parser.add_argument('--data', type=str, default='configs/data/dota_interest_384.yaml', help='data.yaml path')
+    parser.add_argument('--data', type=str, default='configs/data/dota_interest.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='configs/hyp/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch-size', type=int, default=1, help='total batch size for all GPUs')
@@ -560,6 +563,12 @@ if __name__ == '__main__':
         logger.info('Resuming training from %s' % ckpt)
     else:
         # opt.hyp = opt.hyp or ('hyp.finetune.yaml' if opt.weights else 'hyp.scratch.yaml')
+        # obb check data.yaml
+        if opt.small_datasets:
+            filename = opt.data.split('.')[0]
+            opt.data = filename + '_small.yaml'
+        elif opt.data.split('.')[0] == 'dota_interest':  # specialize data.yaml by img_size
+            opt.data = opt.data.split('.')[0] + '_{}.yaml'.format(opt.img_size[0])
         opt.data, opt.cfg, opt.hyp = check_file(opt.data), check_file(opt.cfg), check_file(opt.hyp)  # check files
         assert len(opt.cfg) or len(opt.weights), 'either --cfg or --weights must be specified'
         opt.img_size.extend([opt.img_size[-1]] * (2 - len(opt.img_size)))  # extend to 2 sizes (train, test)

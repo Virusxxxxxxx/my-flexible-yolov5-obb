@@ -113,7 +113,7 @@ def plot_one_rotated_box(rbox, img, color=None, label=None, line_thickness=None,
     poly = np.float32(cv2.boxPoints(rect))  # 返回rect对应的四个点的值
     poly = np.int0(poly)
     # 画出来
-    cv2.drawContours(image=img, contours=[poly], contourIdx=-1, color=color, thickness=2 * tl)
+    cv2.drawContours(image=img, contours=[poly], contourIdx=-1, color=color, thickness=tl)
     c1 = (int(rbox[0]), int(rbox[1]))
     if label:
         tf = max(tl - 1, 1)  # font thickness
@@ -494,10 +494,10 @@ def plotChart(filename, saveDir):
             x.append(float(row[0]))
             y.append(float(row[1]))
 
-    fig = plt.figure(dpi=128, figsize=(10, 6))
+    plt.figure(dpi=128, figsize=(10, 6))
     color = random.choice(['limegreen', 'royalblue', 'orangered'])
     # ln1, = plt.plot(x, y, color=color, linestyle='-', marker='o', linewidth=1)
-    ln1, = plt.plot(x, y, color=color, linestyle='-', linewidth=1)
+    plt.plot(x, y, color=color, linestyle='-', linewidth=1)
     plt.title(filename, fontsize=24)
     if filename in ["classAP"]:
         plt.xlabel("epoch")
@@ -507,6 +507,7 @@ def plotChart(filename, saveDir):
         plt.ylabel("target")
     plt.grid()
     plt.savefig(saveDir + '/' + filename + ".png")
+    plt.close()  # fix More than 20 figures have been opened.
 
 
 def plotChart_interest(filename, saveDir):
