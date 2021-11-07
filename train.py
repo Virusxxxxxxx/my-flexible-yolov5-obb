@@ -102,10 +102,19 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             print('freezing %s' % k)
             v.requires_grad = False
 
+    # Image sizes
+    gs = int(model.stride.max())  # grid size (max stride)
+    nl = model.detection.nl
+    imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
+
+    # Batch size
+    if rank == -1 and batch_size == -1:  # single-GPU only, estimate best batch size
+        batch_size = check_train_batch_size(model, imgsz)
+
     # Optimizer
     nbs = 64  # nominal batch size
-    accumulate = max(round(nbs / total_batch_size), 1)  # accumulate loss before optimizing
-    hyp['weight_decay'] *= total_batch_size * accumulate / nbs  # scale weight_decay
+    accumulate = max(round(nbs / batch_size), 1)  # accumulate loss before optimizing
+    hyp['weight_decay'] *= batch_size * accumulate / nbs  # scale weight_decay
     logger.info(f"Scaled weight_decay = {hyp['weight_decay']}")
     # 将模型分成三组(w权重参数（非bn层）, bias, 其他所有参数)优化
     pg0, pg1, pg2 = [], [], []  # optimizer parameter groups
@@ -170,15 +179,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             epochs += ckpt['epoch']  # finetune additional epochs
 
         del ckpt, state_dict
-
-    # Image sizes
-    gs = int(model.stride.max())  # grid size (max stride)
-    nl = model.detection.nl
-    imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
-
-    # Batch size
-    if rank == -1 and batch_size == -1:  # single-GPU only, estimate best batch size
-        batch_size = check_train_batch_size(model, imgsz)
 
     # DP mode
     if cuda and rank == -1 and torch.cuda.device_count() > 1:
@@ -306,7 +306,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             if ni <= nw:
                 xi = [0, nw]  # x interp
                 # model.gr = np.interp(ni, xi, [0.0, 1.0])  # iou loss ratio (obj_loss = 1.0 or iou)
-                accumulate = max(1, np.interp(ni, xi, [1, nbs / total_batch_size]).round())
+                accumulate = max(1, np.interp(ni, xi, [1, nbs / batch_size]).round())
                 for j, x in enumerate(optimizer.param_groups):
                     # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
                     x['lr'] = np.interp(ni, xi, [hyp['warmup_bias_lr'] if j == 2 else 0.0, x['initial_lr'] * lf(epoch)])
@@ -389,8 +389,9 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               dataloader=testloader,
                               compute_loss=compute_loss,
                               batch_size=batch_size,
-                              save_dir=save_dir)
-                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_' + opt.img_size[0]
+                              save_dir=save_dir,
+                              log_imgs=opt.log_imgs if wandb else 0)
+                datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_{}'.format(opt.img_size[0])
                 # recall, precision, map50 = val(
                 map50 = val(
                     detectionPath='./DOTA/detection',
@@ -559,7 +560,7 @@ if __name__ == '__main__':
         apriori = opt.global_rank, opt.local_rank
         with open(Path(ckpt).parent.parent / 'opt.yaml') as f:
             opt = argparse.Namespace(**yaml.load(f, Loader=yaml.SafeLoader))  # replace
-        opt.cfg, opt.weights, opt.resume, opt.batch_size, opt.global_rank, opt.local_rank = '', ckpt, True, opt.total_batch_size, *apriori  # reinstate
+        opt.cfg, opt.weights, opt.resume, opt.batch_size, opt.global_rank, opt.local_rank = '', ckpt, True, opt.batch_size, *apriori  # reinstate
         logger.info('Resuming training from %s' % ckpt)
     else:
         # opt.hyp = opt.hyp or ('hyp.finetune.yaml' if opt.weights else 'hyp.scratch.yaml')

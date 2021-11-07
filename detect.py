@@ -32,6 +32,7 @@ def detect(opt,
            save_dir=Path(''),
            plots=False,  # plots detect result
            visualize=False,  # visualize features
+           log_imgs=0,  # number of logged images
            ):
     # 获取输出文件夹，输入路径，权重，参数等参数
     out, small_datasets, save_txt, imgsz = \
@@ -67,6 +68,13 @@ def detect(opt,
     if half and not visualize:
         model.half()  # 设置Float16
     model.eval()
+
+    # Logging
+    log_imgs, wandb = min(log_imgs, 100), None  # ceil
+    try:
+        import wandb  # Weights & Biases
+    except ImportError:
+        log_imgs = 0
 
     # Second-stage classifier
     classify = False
@@ -174,7 +182,12 @@ def detect(opt,
                         plot_one_rotated_box(rbox, im0, label=label, color=colors[int(cls)], line_thickness=1)
             # Save results (image with detections)
             if plots or batch_i < 3:
-                cv2.imwrite(str(save_dir/im0_name), im0)
+                cv2.imwrite('test_' + str(save_dir/im0_name), im0)
+            elif batch_i == 10 and wandb:
+                wandb.log(
+                    {"Validation": [wandb.Image(str(x), caption=x.name) for x in save_dir.glob('test*.jpg')
+                                    if x.exists()]},
+                    commit=False)
 
 
         # show val loss

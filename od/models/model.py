@@ -29,7 +29,9 @@ class Model(nn.Module):
         neck_type = model_config.neck.pop('type')
         # BiFPN
         if neck_type == 'BiFPN4':
-            backbone_out_channels = backbone_out.values
+            backbone_out_channels = []
+            for k, v in backbone_out.items():
+                backbone_out_channels.append(v)
             num_channels = model_config.neck.pop('num_channels')  # BiFPN num_channels
             neck_param = {  # BiFPN param
                 'num_channels': num_channels,
@@ -39,7 +41,7 @@ class Model(nn.Module):
             self.bifpn = nn.Sequential()
             for i in range(3):
                 neck_param['first_time'] = True if i == 0 else False
-                self.bifpn.add_module(*[build_neck('BiFPN4', **neck_param)])
+                self.bifpn.add_module('bifpn', *[build_neck('BiFPN4', **neck_param)])
         else:  # FPN + PAN
             backbone_out['version'] = model_config.backbone.version
             self.fpn = build_neck('FPN4', **backbone_out)
