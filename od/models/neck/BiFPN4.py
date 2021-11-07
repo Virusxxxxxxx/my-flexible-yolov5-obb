@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 from torchvision.ops.boxes import nms as nms_torch
+
 from od.models.backbone.efficientnet.utils import Swish
 from od.models.modules import MemoryEfficientSwish, Conv2dStaticSamePadding, MaxPool2dStaticSamePadding
 
@@ -112,18 +113,21 @@ class BiFPN4(nn.Module):
 
         # Weight mid 2-in
         self.p4_w1 = nn.Parameter(torch.ones(2, dtype=torch.float32), requires_grad=True)
-        self.p4_w1_relu = nn.ReLU()
+        self.p4_w1_relu = nn.ReLU(inplace=False)
         self.p3_w1 = nn.Parameter(torch.ones(2, dtype=torch.float32), requires_grad=True)
-        self.p3_w1_relu = nn.ReLU()
+        self.p3_w1_relu = nn.ReLU(inplace=False)
         self.p2_w1 = nn.Parameter(torch.ones(2, dtype=torch.float32), requires_grad=True)
-        self.p2_w1_relu = nn.ReLU()
+        self.p2_w1_relu = nn.ReLU(inplace=False)
         # weight out
         self.p3_w2 = nn.Parameter(torch.ones(3, dtype=torch.float32), requires_grad=True)
-        self.p3_w2_relu = nn.ReLU()
+        self.p3_w2_relu = nn.ReLU(inplace=False)
         self.p4_w2 = nn.Parameter(torch.ones(3, dtype=torch.float32), requires_grad=True)
-        self.p4_w2_relu = nn.ReLU()
+        self.p4_w2_relu = nn.ReLU(inplace=False)
         self.p5_w2 = nn.Parameter(torch.ones(2, dtype=torch.float32), requires_grad=True)
-        self.p5_w2_relu = nn.ReLU()
+        self.p5_w2_relu = nn.ReLU(inplace=False)
+
+        print("BiFPN4 input channel size: C2 {}, C3 {}, C4 {}, C5 {}".format(*conv_channels))
+        print("BiFPN4 output channel size: {}".format(num_channels))
 
     def forward(self, inputs):
         """
@@ -160,19 +164,19 @@ class BiFPN4(nn.Module):
 
         # *************** UPSAMPLE ***************
         # Weights for P4_0 and P5_0 to P4_1
-        p4_w1 = self.p4_w1_relu(self.p4_w1)
+        p4_w1 = self.p4_w1_relu(self.p4_w1.clone())
         weight = p4_w1 / (torch.sum(p4_w1, dim=0) + self.epsilon)
         # Connections for P4_0 and P5_0 to P4_1 respectively
         p4_up = self.conv4_up(self.swish(weight[0] * p4_in + weight[1] * self.p4_upsample(p5_in)))
 
         # Weights for P3_0 and P4_1 to P3_1
-        p3_w1 = self.p3_w1_relu(self.p3_w1)
+        p3_w1 = self.p3_w1_relu(self.p3_w1.clone())
         weight = p3_w1 / (torch.sum(p3_w1, dim=0) + self.epsilon)
         # Connections for P3_0 and P4_1 to P3_1 respectively
         p3_up = self.conv3_up(self.swish(weight[0] * p3_in + weight[1] * self.p3_upsample(p4_up)))
 
         # Weights for P2_0 and P3_1 to P2_2
-        p2_w1 = self.p2_w1_relu(self.p2_w1)
+        p2_w1 = self.p2_w1_relu(self.p2_w1.clone())
         weight = p2_w1 / (torch.sum(p2_w1, dim=0) + self.epsilon)
         # Connections for P2_0 and P3_1 to P2_2 respectively
         p2_out = self.conv2_up(self.swish(weight[0] * p2_in + weight[1] * self.p2_upsample(p3_up)))
@@ -183,21 +187,21 @@ class BiFPN4(nn.Module):
 
         # *************** DOWNSAMPLE ***************
         # Weights for P3_0, P3_1 and P2_2 to P3_2
-        p3_w2 = self.p3_w2_relu(self.p3_w2)
+        p3_w2 = self.p3_w2_relu(self.p3_w2.clone())
         weight = p3_w2 / (torch.sum(p3_w2, dim=0) + self.epsilon)
         # Connections for P4_0, P4_1 and P3_2 to P4_2 respectively
         p3_out = self.conv3_down(
             self.swish(weight[0] * p3_in + weight[1] * p3_up + weight[2] * self.p3_downsample(p2_out)))
 
         # Weights for P4_0, P4_1 and P3_2 to P4_2
-        p4_w2 = self.p4_w2_relu(self.p4_w2)
+        p4_w2 = self.p4_w2_relu(self.p4_w2.clone())
         weight = p4_w2 / (torch.sum(p4_w2, dim=0) + self.epsilon)
         # Connections for P4_0, P4_1 and P3_2 to P4_2 respectively
         p4_out = self.conv4_down(
             self.swish(weight[0] * p4_in + weight[1] * p4_up + weight[2] * self.p4_downsample(p3_out)))
 
         # Weights for P5_0 and P4_2 to P5_2
-        p5_w2 = self.p5_w2_relu(self.p5_w2)
+        p5_w2 = self.p5_w2_relu(self.p5_w2.clone())
         weight = p5_w2 / (torch.sum(p5_w2, dim=0) + self.epsilon)
         # Connections for P5_0 and P4_2 to P5_2
         p5_out = self.conv5_down(self.swish(weight[0] * p5_in + weight[1] * self.p5_downsample(p4_out)))

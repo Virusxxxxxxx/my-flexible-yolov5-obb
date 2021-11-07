@@ -69,12 +69,10 @@ def detect(opt,
         model.half()  # 设置Float16
     model.eval()
 
-    # Logging
-    log_imgs, wandb = min(log_imgs, 100), None  # ceil
     try:
         import wandb  # Weights & Biases
     except ImportError:
-        log_imgs = 0
+        wandb = None
 
     # Second-stage classifier
     classify = False
@@ -182,10 +180,10 @@ def detect(opt,
                         plot_one_rotated_box(rbox, im0, label=label, color=colors[int(cls)], line_thickness=1)
             # Save results (image with detections)
             if plots or batch_i < 3:
-                cv2.imwrite('test_' + str(save_dir/im0_name), im0)
+                cv2.imwrite(str(save_dir/('test_'+im0_name)), im0)
             elif batch_i == 10 and wandb:
                 wandb.log(
-                    {"Validation": [wandb.Image(str(x), caption=x.name) for x in save_dir.glob('test*.jpg')
+                    {"Validation": [wandb.Image(str(x), caption=x.name) for x in save_dir.glob('test*.png')
                                     if x.exists()]},
                     commit=False)
 

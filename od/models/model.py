@@ -22,13 +22,13 @@ class Model(nn.Module):
         if type(model_config) is str:
             model_config = yaml.load(open(model_config, 'r'))
         model_config = Dict(model_config)
-        backbone_type = model_config.backbone.pop('type')  # yolov5 or swin
-        self.backbone = build_backbone(backbone_type, **model_config.backbone)
+        self.backbone_type = model_config.backbone.pop('type')  # yolov5 or swin
+        self.backbone = build_backbone(self.backbone_type, **model_config.backbone)
         backbone_out = self.backbone.out_shape
 
-        neck_type = model_config.neck.pop('type')
+        self.neck_type = model_config.neck.pop('type')
         # BiFPN
-        if neck_type == 'BiFPN4':
+        if self.neck_type == 'BiFPN4':
             backbone_out_channels = []
             for k, v in backbone_out.items():
                 backbone_out_channels.append(v)
@@ -38,11 +38,13 @@ class Model(nn.Module):
                 'conv_channels': backbone_out_channels
             }
             # build bifpn
-            self.bifpn = nn.Sequential()
+            layers = []
             for i in range(3):
                 neck_param['first_time'] = True if i == 0 else False
-                self.bifpn.add_module('bifpn', *[build_neck('BiFPN4', **neck_param)])
-        else:  # FPN + PAN
+                layers.append(*[build_neck('BiFPN4', **neck_param)])
+            self.bifpn = nn.Sequential(*layers)
+            model_config.head['ch'] = (num_channels, num_channels, num_channels, num_channels)
+        elif self.neck_type == 'FPN4':  # FPN4 + PAN4
             backbone_out['version'] = model_config.backbone.version
             self.fpn = build_neck('FPN4', **backbone_out)
             fpn_out = self.fpn.out_shape
@@ -52,6 +54,17 @@ class Model(nn.Module):
 
             pan_out = self.pan.out_shape
             model_config.head['ch'] = pan_out
+        elif self.neck_type == 'FPN':  # FPN + PAN
+            backbone_out['version'] = model_config.backbone.version
+            self.fpn = build_neck('FPN', **backbone_out)
+            fpn_out = self.fpn.out_shape
+
+            fpn_out['version'] = model_config.backbone.version
+            self.pan = build_neck('PAN', **fpn_out)
+
+            pan_out = self.pan.out_shape
+            model_config.head['ch'] = pan_out
+
         self.detection = build_head('YOLOHead', **model_config.head)
         self.stride = self.detection.stride
         self._initialize_biases()
@@ -87,12 +100,17 @@ class Model(nn.Module):
         out = self.backbone(x)
         if visualize:
             feature_visualization(out, 'Swin', save_dir=Path(visualize))
-        out = self.fpn(out)
-        if visualize:
-            feature_visualization(out, 'FPN', save_dir=Path(visualize))
-        out = self.pan(out)
-        if visualize:
-            feature_visualization(out, "PAN", save_dir=Path(visualize))
+        if self.neck_type == 'BiFPN4':
+            out = self.bifpn(out)
+            if visualize:
+                feature_visualization(out, 'BiFPN4', save_dir=Path(visualize))
+        elif self.neck_type == 'FPN4' or self.neck_type == 'FPN':
+            out = self.fpn(out)
+            if visualize:
+                feature_visualization(out, 'FPN', save_dir=Path(visualize))
+            out = self.pan(out)
+            if visualize:
+                feature_visualization(out, "PAN", save_dir=Path(visualize))
         y = self.detection(list(out))
         return y
 
