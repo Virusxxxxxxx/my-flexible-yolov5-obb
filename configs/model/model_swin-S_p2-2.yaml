@@ -1,4 +1,4 @@
-# kmeans++ + swin-S + 4 head
+# kmeans++ + swin-S + 4 head + window_size / 2
 backbone:
   type: SwinTransformer4
   pretrain_img_size: 384
