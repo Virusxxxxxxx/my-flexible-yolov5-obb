@@ -116,10 +116,10 @@ class Model(nn.Module):
         out = self.backbone(x)
         if visualize:
             feature_visualization(out, 'Swin', save_dir=Path(visualize))
-        if self.neck_type == 'BiFPN4':
+        if self.neck_type == 'BiFPN4' or self.neck_type == 'BiFPN':
             out = self.bifpn(out)
             if visualize:
-                feature_visualization(out, 'BiFPN4', save_dir=Path(visualize))
+                feature_visualization(out, 'BiFPN', save_dir=Path(visualize))
         elif self.neck_type == 'FPN4' or self.neck_type == 'FPN':
             out = self.fpn(out)
             if visualize:

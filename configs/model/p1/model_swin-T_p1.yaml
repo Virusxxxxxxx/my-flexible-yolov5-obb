@@ -1,4 +1,4 @@
-# kmeans++ + swin-S
+# kmeans++ + swin-T
 backbone:
   type: SwinTransformer
   pretrain_img_size: 384
@@ -7,7 +7,7 @@ backbone:
   num_heads: [3, 6, 12, 24]
   window_size: 6
   drop_path_rate: 0.2
-  version: swin-S
+  version: swin-T
 neck:
   type: FPN
 head:
