@@ -32,7 +32,7 @@ def detect(opt,
            save_dir=Path(''),
            plots=False,  # plots detect result
            visualize=False,  # visualize features
-           log_imgs=0,  # number of logged images
+           log_imgs=0,  # whether to upload test images (upload per 5 epochs)
            ):
     # 获取输出文件夹，输入路径，权重，参数等参数
     out, small_datasets, save_txt, imgsz = \
@@ -181,7 +181,7 @@ def detect(opt,
             # Save results (image with detections)
             if plots or batch_i < 3:
                 cv2.imwrite(str(save_dir/('test_'+im0_name)), im0)
-            elif batch_i == 10 and wandb:
+            elif batch_i == 10 and wandb and log_imgs:
                 wandb.log(
                     {"Validation": [wandb.Image(str(x), caption=x.name) for x in save_dir.glob('test*.png')
                                     if x.exists()]},

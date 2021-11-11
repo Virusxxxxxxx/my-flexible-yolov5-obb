@@ -1,0 +1,19 @@
+# kmeans++ + swin-B
+backbone:
+  type: SwinTransformer
+  pretrain_img_size: 384
+  embed_dim: 128
+  depths: [2, 2, 18, 2]
+  num_heads: [4, 8, 16, 32]
+  window_size: 12
+  drop_path_rate: 0.5
+  version: swin-B
+neck:
+  type: FPN
+head:
+  nc: 2
+  stride: [8.0, 16.0, 32.0]
+  anchors:
+    - [10,5, 18,8, 19,9]  # P3/8
+    - [21,10, 25,11, 37,15]  # P4/16
+    - [39,17, 49,19, 65,22]  # P5/32

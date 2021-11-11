@@ -270,7 +270,8 @@ def val(detectionPath, rawImagePath, rawLabelPath, resultPath):
     #               'soccer-ball-field', 'roundabout', 'harbor',
     #               'swimming-pool', 'helicopter', 'container-crane']
     # For interest
-    classnames = ['small-vehicle', 'ship']
+    # classnames = ['small-vehicle', 'ship']
+    classnames = ['small-vehicle', 'ship', 'large-vehicle']
 
     result_before_merge_path = str(detectionPath + '/result_txt/result_before_merge')
     result_merged_path = str(detectionPath + '/result_txt/result_merged')
@@ -375,7 +376,8 @@ if __name__ == '__main__':
     '''
 
     val(
-        detectionPath='/home/test/Persons/hukaixuan/yolov5_DOTA_OBB/DOTA_demo_view/detection',
-        rawImagePath=r'/home/test/Persons/hukaixuan/yolov5_DOTA_OBB/DOTA_demo_view/row_images',
-        rawLabelPath=r'/home/test/Persons/hukaixuan/yolov5_DOTA_OBB/DOTA_demo_view/row_DOTA_labels/{:s}.txt'
+        detectionPath='./DOTA/detection',
+        rawImagePath=f'../datasets/dota_interest_384/row_DOTA_labels',  # for test
+        rawLabelPath=f'../datasets/dota_interest_384/row_DOTA_labels/' + r'{:s}.txt',  # for test
+        resultPath=save_dir
     )

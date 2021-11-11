@@ -1,11 +1,13 @@
-# kmeans++ + swin-S + 4 head
+# ********** training too slow ***************
+# kmeans++ + swin-S + 4 head + (imgsz 640 + ws 10)
 backbone:
   type: SwinTransformer4
-  pretrain_img_size: 384
+  pretrain_img_size: 640
   embed_dim: 96
   depths: [2, 2, 18, 2]
   num_heads: [3, 6, 12, 24]
-  window_size: 12
+  window_size: 10
+  drop_path_rate: 0.3
   version: swin-S
 neck:
   type: FPN4

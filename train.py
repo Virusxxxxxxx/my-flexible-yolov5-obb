@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 
 def train(hyp, opt, device, tb_writer=None, wandb=None):
-    classnames = ['small-vehicle', 'ship']
     logger.info(colorstr('hyperparameters: ') + ', '.join(f'{k}={v}' for k, v in hyp.items()))
     save_dir, epochs, batch_size, total_batch_size, weights, rank = \
         Path(opt.save_dir), opt.epochs, opt.batch_size, opt.total_batch_size, opt.weights, opt.global_rank
@@ -74,6 +73,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     train_path = data_dict['train']
     test_path = data_dict['val']
     nc = 1 if opt.single_cls else int(data_dict['nc'])  # number of classes
+    classnames = data_dict['names']
     names = ['item'] if opt.single_cls and len(data_dict['names']) != 1 else data_dict['names']  # class names
     assert len(names) == nc, '%g names found for nc=%g dataset in %s' % (len(names), nc, opt.data)  # check
 
@@ -87,6 +87,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             ckpt['model'].yaml['anchors'] = round(hyp['anchors'])  # force autoanchor
         model = Model(opt.cfg).to(device)  # create
         exclude = ['anchor'] if opt.cfg or hyp.get('anchors') else []  # exclude keys
+        # exclude = ['detection']
         state_dict = ckpt['model'].float().state_dict()  # to FP32
         # state_dict = intersect_dicts(state_dict, model.state_dict(), exclude=exclude)  # intersect
         model.load_state_dict(state_dict, strict=False)  # load
@@ -127,7 +128,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             pg1.append(v.weight)  # apply decay
 
     if opt.adam:
-        optimizer = optim.Adam(pg0, lr=hyp['lr0'], betas=(hyp['momentum'], 0.999))  # adjust beta1 to momentum
+        # optimizer = optim.Adam(pg0, lr=hyp['lr0'], betas=(hyp['momentum'], 0.999))  # adjust beta1 to momentum
+        optimizer = optim.AdamW(pg0, lr=hyp['lr0'], betas=(hyp['momentum'], 0.999))  # adamW
     else:
         optimizer = optim.SGD(pg0, lr=hyp['lr0'], momentum=hyp['momentum'], nesterov=True)
 
@@ -151,8 +153,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     if rank in [-1, 0] and wandb and wandb.run is None:
         opt.hyp = hyp  # add hyperparameters
         wandb_run = wandb.init(config=opt, resume="allow",
-                               project='flexible-yolov5-obb' if opt.project == 'runs/train' else Path(opt.project).stem,
-                               name=save_dir.stem,
+                               project='flex-yolov5-obb' if opt.project == 'runs/train' else Path(opt.project).stem,
+                               name=opt.cfg.split('.')[0].split('/')[-1],
                                id=ckpt.get('wandb_id') if 'ckpt' in locals() else None)
     loggers = {'wandb': wandb}  # loggers dict
 
@@ -390,7 +392,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               compute_loss=compute_loss,
                               batch_size=batch_size,
                               save_dir=save_dir,
-                              log_imgs=opt.log_imgs if wandb else 0)
+                              log_imgs=opt.log_imgs if wandb and ((epoch + 1) % 5 == 0) else 0)
                 datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_{}'.format(opt.img_size[0])
                 # recall, precision, map50 = val(
                 map50 = val(
@@ -568,7 +570,7 @@ if __name__ == '__main__':
         if opt.small_datasets:
             filename = opt.data.split('.')[0]
             opt.data = filename + '_small.yaml'
-        elif opt.data.split('.')[0] == 'dota_interest':  # specialize data.yaml by img_size
+        elif opt.data.split('.')[0].split('/')[-1] == 'dota_interest':  # specialize data.yaml by img_size
             opt.data = opt.data.split('.')[0] + '_{}.yaml'.format(opt.img_size[0])
         opt.data, opt.cfg, opt.hyp = check_file(opt.data), check_file(opt.cfg), check_file(opt.hyp)  # check files
         assert len(opt.cfg) or len(opt.weights), 'either --cfg or --weights must be specified'

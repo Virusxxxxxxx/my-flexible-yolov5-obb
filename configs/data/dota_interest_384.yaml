@@ -6,7 +6,7 @@ train: ../datasets/dota_interest_384/images/train
 val: ../datasets/dota_interest_384/images/val
 
 # number of classes
-nc: 2
+nc: 3
 
 # class names
-names: ['small-vehicle', 'ship']
+names: ['small-vehicle', 'ship', 'large-vehicle']

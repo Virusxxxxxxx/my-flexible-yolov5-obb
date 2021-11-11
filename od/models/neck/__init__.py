@@ -6,6 +6,7 @@ from .FPN import PyramidFeatures as FPN
 from .PAN import PAN
 from .FPN4 import PyramidFeatures as FPN4
 from .PAN4 import PAN4
+from .BiFPN import BiFPN
 
 __all__ = ['build_neck']
 support_neck = ['FPN', 'PAN', 'FPN4', 'PAN4', 'BiFPN', 'BiFPN4']

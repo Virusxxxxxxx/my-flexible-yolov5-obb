@@ -1,11 +1,12 @@
-# kmeans++ + swin-S + 4 head + (imgsz 640 + ws 10)
+# kmeans++ + swin-S + 4 head
 backbone:
   type: SwinTransformer4
-  pretrain_img_size: 640
+  pretrain_img_size: 384
   embed_dim: 96
   depths: [2, 2, 18, 2]
   num_heads: [3, 6, 12, 24]
-  window_size: 10
+  window_size: 12
+  drop_path_rate: 0.3
   version: swin-S
 neck:
   type: FPN4

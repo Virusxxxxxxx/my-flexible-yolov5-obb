@@ -1,17 +1,18 @@
-# kmeans++ + swin-S + 4 head + BiFPN
+# kmeans++ + swin-S + 4 head + more qkv
+# 测试num_heads增加后对精度的影响
 backbone:
   type: SwinTransformer4
   pretrain_img_size: 384
   embed_dim: 96
   depths: [2, 2, 18, 2]
-  num_heads: [3, 6, 12, 24]
-  window_size: 12
+  num_heads: [4, 8, 16, 32]  # changed
+  window_size: 6
+  drop_path_rate: 0.3
   version: swin-S
 neck:
-  type: BiFPN4
-  num_channels: 128
+  type: FPN4
 head:
-  nc: 2
+  nc: 3
   stride: [4.0, 8.0, 16.0, 32.0]
   anchors:
     - [9,4, 3,9, 5,11]  # P2/4

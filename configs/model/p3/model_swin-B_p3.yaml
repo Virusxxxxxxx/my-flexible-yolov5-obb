@@ -1,4 +1,4 @@
-# kmeans++ + swin-B
+# kmeans++ + swin-S + 4 head + BiFPN
 backbone:
   type: SwinTransformer
   pretrain_img_size: 384
@@ -7,8 +7,11 @@ backbone:
   num_heads: [4, 8, 16, 32]
   window_size: 12
   version: swin-B
+neck:
+  type: BiFPN
+  num_channels: 256
 head:
-  nc: 2
+  nc: 3
   stride: [8.0, 16.0, 32.0]
   anchors:
     - [10,5, 18,8, 19,9]  # P3/8
