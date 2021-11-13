@@ -1,14 +1,14 @@
-# kmeans++ + swin-S + 4 head + more qkv
-# 测试num_heads增加后对精度的影响
+# kmeans++ + swin-T + 4 head
+# 验证增加 4head 对精度的影响
 backbone:
-  type: SwinTransformer4
+  type: SwinTransformer
   pretrain_img_size: 384
   embed_dim: 96
-  depths: [2, 2, 18, 2]
-  num_heads: [4, 8, 16, 32]  # changed
+  depths: [2, 2, 6, 2]
+  num_heads: [3, 6, 12, 24]
   window_size: 6
-  drop_path_rate: 0.3
-  version: swin-S
+  drop_path_rate: 0.2
+  version: swin-T
 neck:
   type: FPN4
 head:
