@@ -1,7 +1,7 @@
 # kmeans++ + swin-T + 4 head
 # 验证增加 4head 对精度的影响
 backbone:
-  type: SwinTransformer
+  type: SwinTransformer4
   pretrain_img_size: 384
   embed_dim: 96
   depths: [2, 2, 6, 2]

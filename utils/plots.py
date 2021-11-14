@@ -255,7 +255,7 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
     plt.xlim(0, epochs)
     plt.ylim(0)
     plt.savefig(Path(save_dir) / 'LR.png', dpi=200)
-    plt.close()
+    plt.close('all')
 
 
 def plot_test_txt():  # from utils.plots import *; plot_test()
@@ -332,7 +332,7 @@ def plot_labels(labels, save_dir=Path(''), loggers=None):
     # seaborn correlogram 自动绘制各属性的关系图和分布统计图
     sns.pairplot(x, corner=True, diag_kind='auto', kind='hist', diag_kws=dict(bins=50), plot_kws=dict(pmax=0.9))
     plt.savefig(save_dir / 'labels_correlogram.jpg', dpi=200)
-    plt.close()
+    plt.close('all')
 
     # matplotlib labels
     matplotlib.use('svg')  # faster
@@ -359,7 +359,7 @@ def plot_labels(labels, save_dir=Path(''), loggers=None):
 
     plt.savefig(save_dir / 'labels.jpg', dpi=200)
     matplotlib.use('Agg')
-    plt.close()
+    plt.close('all')
 
     # loggers
     for k, v in loggers.items() or {}:
@@ -507,7 +507,7 @@ def plotChart(filename, saveDir):
         plt.ylabel("target")
     plt.grid()
     plt.savefig(saveDir + '/' + filename + ".png")
-    plt.close()  # fix More than 20 figures have been opened.
+    plt.close('all')  # fix More than 20 figures have been opened.
 
 
 def plotChart_interest(filename, saveDir):
@@ -533,6 +533,7 @@ def plotChart_interest(filename, saveDir):
         plt.ylabel("AP")
     plt.grid()
     plt.savefig(saveDir + '/' + filename + ".png")
+    plt.close('all')
 
 
 def feature_visualization(x, module_type, n=32, save_dir=Path('runs/detect/exp')):

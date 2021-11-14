@@ -4,8 +4,10 @@ backbone:
   version: m # x, m, l ,x
   focus: True
   with_C3TR: False
+neck:
+  type: FPN4
 head:
-  nc: 2
+  nc: 3
   stride: [4.0, 8.0, 16.0, 32.0]
   anchors:
     - [9,4, 3,9, 5,11]  # P2/4
