@@ -1,20 +1,20 @@
-# kmeans++ + swin-S + 4 head + BiFPN
+# kmeans++ + swin-T + BiFPN + nc3
+# 验证BiFPN的可用性
 backbone:
-  type: SwinTransformer4
+  type: SwinTransformer
   pretrain_img_size: 384
   embed_dim: 96
-  depths: [2, 2, 18, 2]
+  depths: [2, 2, 6, 2]
   num_heads: [3, 6, 12, 24]
   window_size: 6
-  version: swin-S
+  drop_path_rate: 0.2
+  version: swin-T
 neck:
-  type: BiFPN4
-  num_channels: 128
+  type: BiFPN
 head:
   nc: 3
-  stride: [4.0, 8.0, 16.0, 32.0]
+  stride: [8.0, 16.0, 32.0]
   anchors:
-    - [9,4, 3,9, 5,11]  # P2/4
     - [10,5, 18,8, 19,9]  # P3/8
     - [21,10, 25,11, 37,15]  # P4/16
     - [39,17, 49,19, 65,22]  # P5/32
