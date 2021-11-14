@@ -451,6 +451,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 torch.save(ckpt, last)
                 if best_fitness == fi:
                     torch.save(ckpt, best)
+                if opt.colab_upload:  # upload
+                    for item in [last, save_dir / f'classAP.csv', save_dir / f'classAP.png']:
+                        os.system('cp --parents %s %s' % (item, opt.colab_upload))
+                    print("   Auto-upload completed!")
                 del ckpt
             # obb EarlyStop
             if rank == -1 and stopper(epoch=epoch, fitness=fi):
@@ -534,6 +538,7 @@ if __name__ == '__main__':
     parser.add_argument('--quad', action='store_true', help='quad dataloader')
     parser.add_argument('--linear-lr', action='store_true', help='linear LR')
     parser.add_argument('--patience', type=int, default=20, help='EarlyStopping patience (epochs without improvement)')
+    parser.add_argument('--colab-upload', type=str, default='', help='Path to auto upload to Google Drive')
 
     # for detection
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')
