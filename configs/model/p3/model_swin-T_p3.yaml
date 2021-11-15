@@ -11,6 +11,7 @@ backbone:
   version: swin-T
 neck:
   type: BiFPN
+  num_channels: 256
 head:
   nc: 3
   stride: [8.0, 16.0, 32.0]
