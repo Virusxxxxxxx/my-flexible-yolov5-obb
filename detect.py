@@ -228,7 +228,7 @@ if __name__ == '__main__':
         update:如果为True，则对所有模型进行strip_optimizer操作，去除pt文件中的优化器等信息，默认为False
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp-swinS-p2-68-map68/weights/last.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='./weights/exp-swinT-p3-60-map68.5-384-adam-focal-nc3.pt', help='model.pt path(s)')
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')  # output folder
     parser.add_argument('--small-datasets', action='store_true', help='display results')
     parser.add_argument('--img-size', nargs='+', type=int, default=[1024, 1024], help='inference size (pixels)')

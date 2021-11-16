@@ -358,7 +358,7 @@ def val(detectionPath, rawImagePath, rawLabelPath, resultPath):
     plotChart_interest("classAP", str(resultPath))
 
     # return recall, precision, map
-    return map
+    return allClassAp
     # classaps = 100 * np.array(classaps)
     # print('classaps: ', classaps)
 

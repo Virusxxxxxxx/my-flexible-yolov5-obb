@@ -244,7 +244,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     nw = max(round(hyp['warmup_epochs'] * nb), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
     # nw = min(nw, (epochs - start_epoch) / 2 * nb)  # limit warmup to < 1/2 of training
     maps = np.zeros(nc)  # mAP per class
-    results = (0, 0, 0, 0, 0, 0, 0, 0)  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls, angle) obb
+    results = (0, 0, 0, 0, 0, 0, 0, 0, 0)  # P, R, mAP@.5, carAP, shipAP, val_loss(box, obj, cls, angle) obb
     scheduler.last_epoch = start_epoch - 1  # do not move
     scaler = amp.GradScaler(enabled=cuda)
     stopper = EarlyStopping(patience=opt.patience)  # obb
@@ -395,13 +395,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                               log_imgs=opt.log_imgs if wandb and ((epoch + 1) % 5 == 0) else 0)
                 datasets = 'dota_interest_small' if opt.small_datasets else 'dota_interest_{}'.format(opt.img_size[0])
                 # recall, precision, map50 = val(
-                map50 = val(
+                allClassAp = val(
                     detectionPath='./DOTA/detection',
                     rawImagePath=f'../datasets/{datasets}/row_DOTA_labels',  # for test
                     rawLabelPath=f'../datasets/{datasets}/row_DOTA_labels/' + r'{:s}.txt',  # for test
                     resultPath=save_dir
                 )
-                results = (0, 0, map50, 0, *loss)  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls, angle) obb
+                # P, R, mAP@.5, carAP, shipAP, val_loss(box, obj, cls, angle) obb
+                results = (0, 0, allClassAp[1], allClassAp[2], allClassAp[3], *loss)
                 # results, maps, times = test(opt.data,
                 #                                  batch_size=batch_size * 2,
                 #                                  imgsz=imgsz_test,
@@ -416,13 +417,13 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
             # Write
             with open(results_file, 'a') as f:
-                f.write(s + '%10.4g' * 8 % results + '\n')  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls, angle)
+                f.write(s + '%10.4g' * 9 % results + '\n')  # P, R, mAP@.5, carAP, shipAP, val_loss(box, obj, cls, angle) obb
             if len(opt.name) and opt.bucket:
                 os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
             # Log
             tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss', 'train/angle_loss',  # train loss
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/AP_small-vehicle', 'metrics/AP_ship',
                     'val/box_loss', 'val/obj_loss', 'val/cls_loss', 'val/angle_loss',  # val loss obb
                     'x/lr0', 'x/lr1', 'x/lr2']  # params
             for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):

@@ -100,12 +100,20 @@ class Model(nn.Module):
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         print('Fusing layers... ')
-        for module in [self.backbone, self.fpn, self.pan, self.detection]:
-            for m in module.modules():
-                if type(m) is Conv and hasattr(m, 'bn'):
-                    m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                    delattr(m, 'bn')  # remove batchnorm
-                    m.forward = m.fuseforward  # update forward
+        if self.bifpn:
+            for module in [self.backbone, self.bifpn, self.detection]:
+                for m in module.modules():
+                    if type(m) is Conv and hasattr(m, 'bn'):
+                        m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                        delattr(m, 'bn')  # remove batchnorm
+                        m.forward = m.fuseforward  # update forward
+        else:
+            for module in [self.backbone, self.fpn, self.pan, self.detection]:
+                for m in module.modules():
+                    if type(m) is Conv and hasattr(m, 'bn'):
+                        m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                        delattr(m, 'bn')  # remove batchnorm
+                        m.forward = m.fuseforward  # update forward
         self.info()
         return self
 
