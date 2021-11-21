@@ -27,7 +27,7 @@ class YOLOv5(nn.Module):
             'stage5': 1024,
             'spp': 1024,
             'csp1': 1024,
-            'conv1': 512
+            # 'conv1': 512
         }
         self.re_channels_out()
 
@@ -54,12 +54,12 @@ class YOLOv5(nn.Module):
             'C2_size': self.channels_out['stage2_2'],  # add
             'C3_size': self.channels_out['stage3_2'],
             'C4_size': self.channels_out['stage4_2'],
-            'C5_size': self.channels_out['conv1']}
+            'C5_size': self.channels_out['csp1']}
         print("backbone output channel: C2 {}, C3 {}, C4 {}, C5 {}".format(
             self.channels_out['stage2_2'],  # add
             self.channels_out['stage3_2'],
             self.channels_out['stage4_2'],
-            self.channels_out['conv1']))
+            self.channels_out['csp1']))
 
     def forward(self, x):
         x = self.stage1(x)

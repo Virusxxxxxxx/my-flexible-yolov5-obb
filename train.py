@@ -88,6 +88,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         model = Model(opt.cfg).to(device)  # create
         exclude = ['anchor'] if opt.cfg or hyp.get('anchors') else []  # exclude keys
         # exclude = ['detection', 'fpn', 'pan']
+        # exclude = ['backbone']
         state_dict = ckpt['model'].float().state_dict()  # to FP32
         # state_dict = intersect_dicts(state_dict, model.state_dict(), exclude=exclude)  # intersect
         model.load_state_dict(state_dict, strict=False)  # load

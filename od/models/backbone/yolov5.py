@@ -27,7 +27,7 @@ class YOLOv5(nn.Module):
             'stage5': 1024,
             'spp': 1024,
             'csp1': 1024,
-            'conv1': 512
+            # 'conv1': 512
         }
         self.re_channels_out()
 
@@ -49,13 +49,13 @@ class YOLOv5(nn.Module):
             self.c3tr = C3TR(self.channels_out['spp'], self.channels_out['csp1'], self.get_depth(3), False)
         else:
             self.csp1 = C3(self.channels_out['spp'], self.channels_out['csp1'], self.get_depth(3), False)
-        self.conv1 = Conv(self.channels_out['csp1'], self.channels_out['conv1'], 1, 1)
+        # self.conv1 = Conv(self.channels_out['csp1'], self.channels_out['conv1'], 1, 1)
         self.out_shape = {'C3_size': self.channels_out['stage3_2'],
                           'C4_size': self.channels_out['stage4_2'],
-                          'C5_size': self.channels_out['conv1']}
+                          'C5_size': self.channels_out['csp1']}
         print("backbone output channel: C3 {}, C4 {}, C5 {}".format(self.channels_out['stage3_2'],
                                                                     self.channels_out['stage4_2'],
-                                                                    self.channels_out['conv1']))
+                                                                    self.channels_out['csp1']))
 
     def forward(self, x):
         x = self.stage1(x)
