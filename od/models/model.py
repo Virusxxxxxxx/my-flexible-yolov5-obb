@@ -30,6 +30,7 @@ class Model(nn.Module):
         # BiFPN
         if self.neck_type == 'BiFPN4':
             backbone_out_channels = []
+            bifpn_depths = model_config.neck.pop('depths')
             for k, v in backbone_out.items():
                 backbone_out_channels.append(v)
             num_channels = model_config.neck.pop('num_channels')  # BiFPN num_channels
@@ -39,13 +40,14 @@ class Model(nn.Module):
             }
             # build bifpn
             layers = []
-            for i in range(3):
+            for i in range(bifpn_depths):
                 neck_param['first_time'] = True if i == 0 else False
                 layers.append(*[build_neck('BiFPN4', **neck_param)])
             self.bifpn = nn.Sequential(*layers)
             model_config.head['ch'] = (num_channels, num_channels, num_channels, num_channels)
-        elif self.neck_type == 'BiFPN':  # TODO
+        elif self.neck_type == 'BiFPN':  # TODO 简化代码
             backbone_out_channels = []
+            bifpn_depths = model_config.neck.pop('depths')
             for k, v in backbone_out.items():
                 backbone_out_channels.append(v)
             num_channels = model_config.neck.pop('num_channels')  # BiFPN num_channels
@@ -55,7 +57,7 @@ class Model(nn.Module):
             }
             # build bifpn
             layers = []
-            for i in range(3):
+            for i in range(bifpn_depths):
                 neck_param['first_time'] = True if i == 0 else False
                 layers.append(*[build_neck('BiFPN', **neck_param)])
             self.bifpn = nn.Sequential(*layers)

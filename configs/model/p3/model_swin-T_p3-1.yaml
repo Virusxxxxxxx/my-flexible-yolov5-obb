@@ -11,6 +11,7 @@ backbone:
 neck:
   type: BiFPN4
   num_channels: 256
+  depths: 3
 head:
   nc: 3
   stride: [4.0, 8.0, 16.0, 32.0]
