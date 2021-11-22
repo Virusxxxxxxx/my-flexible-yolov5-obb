@@ -109,7 +109,10 @@ class BiFPN(nn.Module):
         self.p5_w2 = nn.Parameter(torch.ones(2, dtype=torch.float32), requires_grad=True)
         self.p5_w2_relu = nn.ReLU(inplace=False)
 
-        print("BiFPN4 input channel size: C3 {}, C4 {}, C5 {}".format(*conv_channels))
+        if self.first_time:
+            print("BiFPN4 input channel size: C3 {}, C4 {}, C5 {}".format(*conv_channels))
+        else:
+            print("BiFPN4 input channel size: C3 {}, C4 {}, C5 {}".format(*[num_channels]*3))
         print("BiFPN4 output channel size: {}".format(num_channels))
 
     def forward(self, inputs):
