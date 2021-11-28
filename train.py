@@ -1,4 +1,5 @@
 import argparse
+import collections
 import csv
 import logging
 import math
@@ -96,9 +97,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     elif weights.endswith('.pth'):  # import pth model
         model = Model(opt.cfg).to(device)  # create
         state_dict = torch.load(weights)
-        model.load_state_dict(state_dict, strict=False)
+        new_state_dic = {'model': collections.OrderedDict([("backbone." + k, v) for k, v in state_dict['model'].items()])}
+        model.load_state_dict(new_state_dic, strict=False)
         logger.info('Transferred %g/%g items from %s' % (len(*state_dict), len(model.state_dict()), weights))  # report
-        print(model.state_dict())
+        model_state_dict = model.state_dict()
     else:
         model = Model(opt.cfg).to(device)  # create
 
@@ -392,7 +394,9 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'gr', 'names', 'stride', 'class_weights'])
             # final_epoch = epoch + 1 == epochs
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop  # obb
-            if not opt.notest or final_epoch:  # Calculate mAP
+            do_val = (epoch + 1) % opt.val_interval == 0 or pretrained  # 达到val间隔，或在pretrain第一轮
+            pretrained = False
+            if not opt.notest or final_epoch and do_val:  # Calculate mAP
                 loss = detect(opt,
                               model=ema.ema,
                               dataloader=testloader,
@@ -423,26 +427,27 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 #                                  compute_loss=compute_loss)
 
             # Write
-            with open(results_file, 'a') as f:
-                f.write(s + '%10.4g' * 9 % results + '\n')  # P, R, mAP@.5, carAP, shipAP, val_loss(box, obj, cls, angle) obb
-            if len(opt.name) and opt.bucket:
-                os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
+            if do_val:
+                with open(results_file, 'a') as f:
+                    f.write(s + '%10.4g' * 9 % results + '\n')  # P, R, mAP@.5, carAP, shipAP, val_loss(box, obj, cls, angle) obb
+                if len(opt.name) and opt.bucket:
+                    os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-            # Log
-            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss', 'train/angle_loss',  # train loss
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/AP_small-vehicle', 'metrics/AP_ship',
-                    'val/box_loss', 'val/obj_loss', 'val/cls_loss', 'val/angle_loss',  # val loss obb
-                    'x/lr0', 'x/lr1', 'x/lr2']  # params
-            for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
-                if tb_writer:
-                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
-                if wandb:
-                    wandb.log({tag: x}, step=epoch, commit=tag == tags[-1])  # W&B
+                # Log
+                tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss', 'train/angle_loss',  # train loss
+                        'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/AP_small-vehicle', 'metrics/AP_ship',
+                        'val/box_loss', 'val/obj_loss', 'val/cls_loss', 'val/angle_loss',  # val loss obb
+                        'x/lr0', 'x/lr1', 'x/lr2']  # params
+                for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
+                    if tb_writer:
+                        tb_writer.add_scalar(tag, x, epoch)  # tensorboard
+                    if wandb:
+                        wandb.log({tag: x}, step=epoch, commit=tag == tags[-1])  # W&B
 
-            # Update best mAP
-            fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
-            if fi > best_fitness:
-                best_fitness = fi
+                # Update best mAP
+                fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+                if fi > best_fitness:
+                    best_fitness = fi
 
             # Save model
             save = (not opt.nosave) or (final_epoch and not opt.evolve)
@@ -547,6 +552,7 @@ if __name__ == '__main__':
     parser.add_argument('--linear-lr', action='store_true', help='linear LR')
     parser.add_argument('--patience', type=int, default=20, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--colab-upload', type=str, default='', help='Path to auto upload to Google Drive')
+    parser.add_argument('--val-interval', type=int, default=1, help='val-interval')
 
     # for detection
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')

@@ -11,7 +11,7 @@ backbone:
 neck:
   type: FPN
 head:
-  nc: 2
+  nc: 3
   stride: [8.0, 16.0, 32.0]
   anchors:
     - [10,5, 18,8, 19,9]  # P3/8
