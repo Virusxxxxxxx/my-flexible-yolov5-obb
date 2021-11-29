@@ -396,7 +396,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop  # obb
             do_val = (epoch + 1) % opt.val_interval == 0 or pretrained  # 达到val间隔，或在pretrain第一轮
             pretrained = False
-            if not opt.notest or final_epoch and do_val:  # Calculate mAP
+            if (not opt.notest or final_epoch) and do_val:  # Calculate mAP
                 loss = detect(opt,
                               model=ema.ema,
                               dataloader=testloader,
