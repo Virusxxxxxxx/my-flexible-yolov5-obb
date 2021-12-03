@@ -400,7 +400,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'gr', 'names', 'stride', 'class_weights'])
             # final_epoch = epoch + 1 == epochs
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop  # obb
-            do_val = (epoch + 1) % opt.val_interval == 0 or pretrained  # 达到val间隔，或在pretrain第一轮
+            do_val = (epoch == 0) or ((epoch + 1) % opt.val_interval == 0) or pretrained  # 达到val间隔，或在pretrain第一轮
             if (not opt.notest or final_epoch) and do_val:  # Calculate mAP
                 loss = detect(opt,
                               model=ema.ema,
