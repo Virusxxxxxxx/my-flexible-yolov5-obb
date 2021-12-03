@@ -401,7 +401,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             # final_epoch = epoch + 1 == epochs
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop  # obb
             do_val = (epoch + 1) % opt.val_interval == 0 or pretrained  # 达到val间隔，或在pretrain第一轮
-            pretrained = False
             if (not opt.notest or final_epoch) and do_val:  # Calculate mAP
                 loss = detect(opt,
                               model=ema.ema,
@@ -471,13 +470,18 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 if best_fitness == fi:
                     torch.save(ckpt, best)
                 if opt.colab_upload:  # upload
-                    for item in [last, save_dir / f'classAP.csv', save_dir / f'classAP.png']:
-                        os.system('cp --parents %s %s' % (item, opt.colab_upload))
+                    if epoch == 0 or pretrained:
+                        os.system('cp --parents -r %s %s' % (save_dir, opt.colab_upload))
+                    else:
+                        for item in [last, save_dir / f'classAP.csv', save_dir / f'classAP.png']:
+                            os.system('cp --parents %s %s' % (item, opt.colab_upload))
                     print("   Auto-upload completed!")
                 del ckpt
             # obb EarlyStop
             if rank == -1 and stopper(epoch=epoch, fitness=fi):
                 break
+
+            pretrained = False
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training
 
