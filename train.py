@@ -5,6 +5,7 @@ import logging
 import math
 import os
 import random
+import shutil
 import time
 from pathlib import Path
 from threading import Thread
@@ -55,12 +56,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     last = wdir / 'last.pt'
     best = wdir / 'best.pt'
     results_file = save_dir / 'results.txt'
+    cfg_name = opt.cfg.split('/')[-1]
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
         yaml.dump(hyp, f, sort_keys=False)
     with open(save_dir / 'opt.yaml', 'w') as f:
         yaml.dump(vars(opt), f, sort_keys=False)
+    shutil.copy(opt.cfg, save_dir / cfg_name)
 
     # Configure
     plots = not opt.evolve  # create plots
@@ -161,9 +164,12 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     # Logging
     if rank in [-1, 0] and wandb and wandb.run is None:
         opt.hyp = hyp  # add hyperparameters
+        with open(opt.cfg) as f:
+            cfg = yaml.load(f, Loader=yaml.SafeLoader)  # load cfg
+        opt.cfg = cfg  # update cfg
         wandb_run = wandb.init(config=opt, resume="allow",
                                project='flex-yolov5-obb' if opt.project == 'runs/train' else Path(opt.project).stem,
-                               name=opt.cfg.split('.')[0].split('/')[-1],
+                               name=cfg_name.split('.')[0],
                                id=ckpt.get('wandb_id') if 'ckpt' in locals() else None)
     loggers = {'wandb': wandb}  # loggers dict
 
