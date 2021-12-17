@@ -1,0 +1,19 @@
+# kmeans++ + swin-T
+backbone:
+  type: DWNet
+  pretrain_img_size: 384
+  embed_dim: 96
+  depths: [2, 2, 6, 2]
+  window_size: 7
+  drop_path_rate: 0.2
+  version: dwnet-t
+  dynamic: True
+neck:
+  type: FPN
+head:
+  nc: 3
+  stride: [8.0, 16.0, 32.0]
+  anchors:
+    - [10,5, 18,8, 19,9]  # P3/8
+    - [21,10, 25,11, 37,15]  # P4/16
+    - [39,17, 49,19, 65,22]  # P5/32
