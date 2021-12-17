@@ -41,7 +41,9 @@ def detect(opt,
     if opt.small_datasets:
         source = '../datasets/dota_interest_small/images/val'
     elif plots:  # test and plots
-        source = '../datasets/dota_interest_{}/images/test'.format(imgsz)
+        source = '../datasets/dota_interest_600_small/train/images'
+    elif opt.test_datasets:  # dota_test
+        source = '../datasets/dota_test/testsplit/images'
     else:
         source = '../datasets/dota_interest_{}/images/val'.format(imgsz)
 
@@ -228,9 +230,10 @@ if __name__ == '__main__':
         update:如果为True，则对所有模型进行strip_optimizer操作，去除pt文件中的优化器等信息，默认为False
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='./weights/exp-swinT-p3-60-map68.5-384-adam-focal-nc3.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='./weights/exp-yolom-p1-44-map73.1-384-strip.pt', help='model.pt path(s)')
     parser.add_argument('--detect_output', type=str, default='DOTA/detection', help='output folder')  # output folder
     parser.add_argument('--small-datasets', action='store_true', help='display results')
+    parser.add_argument('--test-datasets', action='store_true', help='display results')
     parser.add_argument('--img-size', nargs='+', type=int, default=[1024, 1024], help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.4, help='IOU threshold for NMS')

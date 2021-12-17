@@ -547,7 +547,7 @@ def feature_visualization(x, module_type, n=32, save_dir=Path('runs/detect/exp')
     for i in range(len(x)):
         batch, channels, height, width = x[i].shape  # batch, channels, height, width
         if height > 1 and width > 1:
-            f = f"stage{i}_{module_type}_features.png"  # filename
+            f = f"{module_type}_stage{i}.png"  # filename
             blocks = torch.chunk(x[i][0].cpu(), channels, dim=0)  # select batch index 0, block by channels
             n = min(n, channels)  # number of plots
             fig, ax = plt.subplots(math.ceil(n / 8), 8, tight_layout=True)  # 8 rows x n/8 cols

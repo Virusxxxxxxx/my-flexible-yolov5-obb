@@ -30,7 +30,8 @@ class PAN(nn.Module):
                  'x': {'gd': 1.33, 'gw': 1.25},
                  'swin-t': {'gd': 0.67, 'gw': 0.75},
                  'swin-s': {'gd': 0.67, 'gw': 0.75},
-                 'swin-b': {'gd': 0.67, 'gw': 1}
+                 'swin-b': {'gd': 0.67, 'gw': 1},
+                 'dwnet-t': {'gd': 0.67, 'gw': 0.75}
                  }
 
         if self.version.lower() in gains:

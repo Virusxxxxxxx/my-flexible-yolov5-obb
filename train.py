@@ -574,6 +574,9 @@ if __name__ == '__main__':
     parser.add_argument('--iou-thres', type=float, default=0.4, help='IOU threshold for NMS')
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     parser.add_argument('--agnostic-nms', action='store_true', default=False, help='class-agnostic NMS')
+
+    # for test
+    parser.add_argument('--test-datasets', action='store_true', help='display results')
     opt = parser.parse_args()
 
     # Set DDP variables

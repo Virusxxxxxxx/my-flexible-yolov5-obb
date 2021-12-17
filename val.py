@@ -8,6 +8,8 @@
 import csv
 import xml.etree.ElementTree as ET
 import os
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import polyiou
@@ -23,7 +25,7 @@ def parse_gt(filename):
     :return: all instances in a picture
     """
     objects = []
-    with  open(filename, 'r') as f:
+    with open(filename, 'r') as f:
         while True:
             line = f.readline()
             if line:
@@ -377,7 +379,7 @@ if __name__ == '__main__':
 
     val(
         detectionPath='./DOTA/detection',
-        rawImagePath=f'../datasets/dota_interest_384/row_DOTA_labels',  # for test
-        rawLabelPath=f'../datasets/dota_interest_384/row_DOTA_labels/' + r'{:s}.txt',  # for test
-        resultPath=save_dir
+        rawImagePath=f'../datasets/dota_test/test_raw/annfiles',  # for test
+        rawLabelPath=f'../datasets/dota_test/testsplit/annfiles' + r'{:s}.txt',  # for test
+        resultPath=Path('./DOTA/detection')
     )

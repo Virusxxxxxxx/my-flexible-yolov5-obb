@@ -102,7 +102,7 @@ class Model(nn.Module):
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         print('Fusing layers... ')
-        if self.bifpn:
+        if self.neck_type == 'BiFPN4' or self.neck_type == 'BiFPN':
             for module in [self.backbone, self.bifpn, self.detection]:
                 for m in module.modules():
                     if type(m) is Conv and hasattr(m, 'bn'):
@@ -125,7 +125,7 @@ class Model(nn.Module):
     def forward(self, x, visualize=False):
         out = self.backbone(x)
         if visualize:
-            feature_visualization(out, 'Swin', save_dir=Path(visualize))
+            feature_visualization(out, self.backbone_type, save_dir=Path(visualize))
         if self.neck_type == 'BiFPN4' or self.neck_type == 'BiFPN':
             out = self.bifpn(out)
             if visualize:

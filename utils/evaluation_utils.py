@@ -180,6 +180,8 @@ def mergebase(srcpath, dstpath, nms):
                 pattern2 = re.compile(r'__([\d+\.]+)__\d+___')  # \.表示一切字符
 
                 rate = re.findall(pattern2, subname)[0]  # 找到该subname分割图片时的分割rate (resize rate before cut)
+                if float(rate) > 2.0:
+                    rate = 1.0
 
                 confidence = splitline[1]
                 classname = splitline[-1]
